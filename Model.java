@@ -63,7 +63,7 @@ public class Model {
     public void left() {
         boolean moveFlag = false;
         for (int i = 0; i < gameTiles.length; i++) {
-            if (compressTiles(gameTiles[i]) || mergeTiles(gameTiles[i])) moveFlag = true;
+            if (compressTiles(gameTiles[i]) | mergeTiles(gameTiles[i])) moveFlag = true;
         }
         if (moveFlag) addTile();
     }
@@ -111,22 +111,22 @@ public class Model {
         }
         if (count == 0 | count == FIELD_WIDTH) return false;
         else {
-//            int hash = Arrays.hashCode(tiles);
-//            Arrays.sort(tiles, Comparator.comparing(Tile::isEmpty));
-//            return hash != Arrays.hashCode(tiles);
-            List<Tile> tileFull = new ArrayList<>();
-            List<Tile> tileEmpty = new ArrayList<>();
-            for (int i = 0; i < FIELD_WIDTH; i++) {
-                if (tiles[i].value == 0) tileEmpty.add(tiles[i]);
-                else tileFull.add(tiles[i]);
-            }
-            for (int i = 0; i < tileFull.size(); i++) {
-                tiles[i] = tileFull.get(i);
-            }
-            for (int i = 0; i < tileEmpty.size(); i++) {
-                tiles[i + tileFull.size()] = tileEmpty.get(i);
-            }
-            return true;
+            int hash = Arrays.hashCode(tiles);
+            Arrays.sort(tiles, Comparator.comparing(Tile::isEmpty));
+            return hash != Arrays.hashCode(tiles);
+//            List<Tile> tileFull = new ArrayList<>();
+//            List<Tile> tileEmpty = new ArrayList<>();
+//            for (int i = 0; i < FIELD_WIDTH; i++) {
+//                if (tiles[i].value == 0) tileEmpty.add(tiles[i]);
+//                else tileFull.add(tiles[i]);
+//            }
+//            for (int i = 0; i < tileFull.size(); i++) {
+//                tiles[i] = tileFull.get(i);
+//            }
+//            for (int i = 0; i < tileEmpty.size(); i++) {
+//                tiles[i + tileFull.size()] = tileEmpty.get(i);
+//            }
+//            return true;
         }
     }
 
