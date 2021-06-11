@@ -1,15 +1,17 @@
 package com.javarush.task.task35.task3513;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class Model {
     private static final int FIELD_WIDTH = 4;
     private Tile[][] gameTiles;
     int score;
     int maxTile;
+
+    private Stack<Tile[][]> previousStates = new Stack();
+    private Stack<Integer> previousScores = new Stack();
+
+    private boolean isSaveNeeded = true;
 
     public Model() {
         gameTiles = new Tile[FIELD_WIDTH][FIELD_WIDTH];
@@ -61,14 +63,17 @@ public class Model {
     }
 
     public void left() {
+        if (isSaveNeeded) saveState(gameTiles);
         boolean moveFlag = false;
         for (int i = 0; i < gameTiles.length; i++) {
             if (compressTiles(gameTiles[i]) | mergeTiles(gameTiles[i])) moveFlag = true;
         }
         if (moveFlag) addTile();
+        isSaveNeeded = true;
     }
 
     public void down() {
+        saveState(gameTiles);
         rotate(gameTiles);
         left();
         rotate(gameTiles);
@@ -77,6 +82,7 @@ public class Model {
     }
 
     public void right() {
+        saveState(gameTiles);
         rotate(gameTiles);
         rotate(gameTiles);
         left();
@@ -85,6 +91,7 @@ public class Model {
     }
 
     public void up() {
+        saveState(gameTiles);
         rotate(gameTiles);
         rotate(gameTiles);
         rotate(gameTiles);
@@ -149,6 +156,77 @@ public class Model {
                 }
             }
             return true;
+        }
+    }
+
+    public void rollback() {
+        if (!previousStates.isEmpty() && !previousScores.isEmpty()) {
+            this.gameTiles = previousStates.pop();
+            score = previousScores.pop();
+        }
+    }
+
+    private void saveState(Tile[][] gameTiles) {
+        Tile[][] stackGameTiles = new Tile[FIELD_WIDTH][FIELD_WIDTH];
+        for (int i = 0; i < FIELD_WIDTH; i++) {
+            for (int j = 0; j < FIELD_WIDTH; j++) {
+                stackGameTiles[i][j] = new Tile(gameTiles[i][j].value);
+            }
+        }
+        previousStates.push(stackGameTiles);
+        previousScores.push(score);
+        isSaveNeeded = false;
+    }
+
+    public void randomMove() {
+        switch (((int) (Math.random() * 100)) % 4) {
+            case 0:
+                left();
+            case 1:
+                right();
+            case 2:
+                up();
+            case 3:
+                down();
+
+        }
+    }
+
+    public void autoMove(){
+        PriorityQueue<MoveEfficiency> priorityQueue = new PriorityQueue<>(4,Collections.reverseOrder());
+        priorityQueue.add(getMoveEfficiency(this::left));
+        priorityQueue.add(getMoveEfficiency(this::right));
+        priorityQueue.add(getMoveEfficiency(this::up));
+        priorityQueue.add(getMoveEfficiency(this::down));
+        priorityQueue.peek().getMove().move();
+    }
+
+    public boolean hasBoardChanged() {
+        int valueGameTiles = 0;
+        int valueStackGameTiles = 0;
+        for (int i = 0; i < FIELD_WIDTH; i++) {
+            for (int j = 0; j < FIELD_WIDTH; j++) {
+                valueGameTiles += gameTiles[i][j].value;
+            }
+        }
+        Tile[][] stackGameTiles = previousStates.peek();
+        for (int i = 0; i < FIELD_WIDTH; i++) {
+            for (int j = 0; j < FIELD_WIDTH; j++) {
+                valueStackGameTiles += stackGameTiles[i][j].value;
+            }
+        }
+
+        if (valueGameTiles != valueStackGameTiles) return true;
+        else return false;
+    }
+
+    public MoveEfficiency getMoveEfficiency(Move move) {
+        move.move();
+        if (!hasBoardChanged()) return new MoveEfficiency(-1, 0, move);
+        else {
+            MoveEfficiency moveEfficiency = new MoveEfficiency(getEmptyTiles().size(), score, move);
+            rollback();
+            return moveEfficiency;
         }
     }
 }
